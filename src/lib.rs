@@ -1,89 +1,126 @@
+/*
+    Rust Radix Manipulation Library
+    ßý Mg // 2016 // License: WTFPL
+
+    Available combinations of charsets/radix :
+        b8      / 8     -> Base8;
+        b16     / 16    -> Base16;
+        b32     / 32    -> Base32;
+        zb32    / 32    -> ZBase32;
+        b32hex  / 32    -> Base32Hex;
+        b64     / 64    -> Base64;
+        b58bc   / 58    -> Base58BC;
+        b58ripe / 58    -> Base58Ripe;  (NIY)
+        b58flkr / 58    -> Base58Flickr (NIY)
+
+*/
+
 include!("./charsets.rs");
 
-pub struct Base85;
 pub struct Base64;
+pub struct Base58BC;
 pub struct Base32;
 pub struct ZBase32;
 pub struct Base32Hex;
 pub struct Base16;
 pub struct Base8;
 
-fn encode(s: String, basename: &str, radix: usize) -> Result<String, String> {
+pub fn encode(s: String, basename: &str, radix: usize) -> Result<String, String> {
+    assert!(radix > 1);
+    assert!(basename.to_string().len() > 0);
+
+    let mut success: bool = true;
     let mut result: String = String::new();
     let mut binpattern: String = String::new();
+
     let lcm = format!("{:b}", radix).len() - 1;
+    let charset = match get_charset(basename) {
+        Ok(x) => x,
+        Err(_) => "",
+    };
 
-    let charset = try!(get_charset(basename));
+    'encodeloop: for b in s.as_bytes() {
+        binpattern.push_str(&*format!(
+                "{:8b}", b
+            ).replace(" ", "0")
+        );
 
-    for b in s.as_bytes() {
-        let mut pattern = format!("{:b}", b);
-        while pattern.len() < 8 {pattern = format!("0{}", pattern)}
-
-        binpattern.push_str(&*pattern);
-
-        while binpattern.len() > lcm {
-            let slc = usize::from_str_radix(&binpattern[0..lcm], 2).unwrap();
-
-            binpattern = binpattern[lcm..].to_string();
-            result.push_str(&charset[slc..slc+1]);
-        }
-    }
+        result.push_str(
+                if binpattern.len() > lcm {
+                    match usize::from_str_radix(&*(binpattern.drain(0..lcm).collect::<String>()), 2) {
+                        Ok(x) => &charset[x..x+1],
+                        Err(_) => {success = false; break 'encodeloop;},
+                    }
+                } else {
+                    ""
+                }
+        )
+    };
 
     // Complete if some bytes are left over
     if binpattern.len() > 0 {
         while binpattern.len() % lcm > 0 {binpattern.push_str("00000000");}
 
         while binpattern.len() > 0 {
-            let slc = usize::from_str_radix(&binpattern[0..lcm], 2).unwrap();
-            binpattern = binpattern[lcm..].to_string();
-            result.push_str(if slc == 0 {"="} else {&charset[slc..slc+1]});
-        }
-    }
+            result.push_str(
+                match usize::from_str_radix(&*(binpattern.drain(0..lcm).collect::<String>()), 2) {
+                    Ok(x) => if x == 0 {"="} else {&charset[x..x+1]},
+                    Err(_) => {success = false; break;}
+                }
+            );
+        };
+    };
 
-    Ok(result)
+    match success {
+        true => Ok(result),
+        false => Err("error in decoding string".to_string()),
+    }
 }
 
-fn decode(s: String, basename: &str, radix: usize) -> Result<String, String> {
+pub fn decode(s: String, basename: &str, radix: usize) -> Result<String, String> {
+    assert!(radix > 1);
+    assert!(basename.to_string().len() > 0);
+
+    let mut success: bool = true;
     let mut result: String = String::new();
     let mut binpattern: String = String::new();
+
     let lcm = format!("{:b}", radix).len() - 1;
+    let charset = match get_charset(basename) {
+        Ok(x) => x,
+        Err(_) => "",
+    };
 
-    let charset = try!(get_charset(basename));
-
-    for b in s.chars() {
+    'decodeloop: for b in s.chars() {
         if b == '=' {
-            continue
-        } else {
-            let idx = charset.find(b);
-            let mut k = format!("{:b}", idx.unwrap());
-            while k.len() < lcm {k = format!("0{}", k);}
-
-            binpattern.push_str(&*k);
+            continue;
         }
 
-        while binpattern.len() >= 8 {
-            let it = vec![u8::from_str_radix(&binpattern[0..8], 2).unwrap()];
-            binpattern = binpattern[8..].to_string();
+        binpattern.push_str(&*(
+            match charset.find(b) {
+                None => String::new(),
+                Some(x) => format!("{:8b}", x).replace(" ", "0")[8-lcm..8].to_string(),
+            }
+        ));
 
-            let chr = std::string::String::from_utf8(it);
-            if chr.is_err() {panic!("Invalid UTF8 string");}
-
-            result.push_str(chr.unwrap().as_str());
-        }
+        result.push_str(&*(
+            if binpattern.len() >= 8 {
+                match u8::from_str_radix(&*(binpattern.drain(0..8).collect::<String>()), 2) {
+                    Ok(x) => match std::string::String::from_utf8(vec![x]) {
+                        Ok(y) => y,
+                        Err(_) => {success = false; break 'decodeloop}
+                    },
+                    Err(_) => {success = false; break 'decodeloop},
+                }
+            } else {
+                String::new()
+            }
+        ))
     }
 
-    Ok(result)
-}
-
-impl Base85 {
-    pub fn new() -> Base85 { Base85{} }
-
-    pub fn encode(&self, s: String) -> String {
-        encode(s, "b85", 85).unwrap()
-    }
-
-    pub fn decode(&self, s: String) -> String {
-        decode(s, "b85", 85).unwrap()
+    match success {
+        true => Ok(result),
+        false => Err("error in decoding string".to_string()),
     }
 }
 
@@ -96,6 +133,18 @@ impl Base64 {
 
     pub fn decode(&self, s: String) -> String {
         decode(s, "b64", 64).unwrap()
+    }
+}
+
+impl Base58BC {
+    pub fn new() -> Base58BC { Base58BC{} }
+
+    pub fn encode(&self, s: String) -> String {
+        encode(s, "b58bc", 58).unwrap()
+    }
+
+    pub fn decode(&self, s: String) -> String {
+        decode(s, "b58bc", 58).unwrap()
     }
 }
 

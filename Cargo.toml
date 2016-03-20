@@ -10,6 +10,8 @@ license = "WTFPL"
 [dependencies]
 
 [lib]
+name = "radix"
+path = "src/lib.rs"
 test = true
 doctest = false
 bench = false
