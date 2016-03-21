@@ -8,10 +8,10 @@
         b32     / 32    -> Base32;
         zb32    / 32    -> ZBase32;
         b32hex  / 32    -> Base32Hex;
-        b64     / 64    -> Base64;
         b58bc   / 58    -> Base58BC;
-        b58ripe / 58    -> Base58Ripe;  (NIY)
-        b58flkr / 58    -> Base58Flickr (NIY)
+        b58rpl  / 58    -> Base58Ripple;
+        b58flkr / 58    -> Base58Flickr;
+        b64     / 64    -> Base64;
 
 */
 
@@ -19,6 +19,8 @@ include!("./charsets.rs");
 
 pub struct Base64;
 pub struct Base58BC;
+pub struct Base58Ripple;
+pub struct Base58Flickr;
 pub struct Base32;
 pub struct ZBase32;
 pub struct Base32Hex;
@@ -145,6 +147,30 @@ impl Base58BC {
 
     pub fn decode(&self, s: String) -> String {
         decode(s, "b58bc", 58).unwrap()
+    }
+}
+
+impl Base58Ripple {
+    pub fn new() -> Base58Ripple { Base58Ripple{} }
+
+    pub fn encode(&self, s: String) -> String {
+        encode(s, "b58rpl", 58).unwrap()
+    }
+
+    pub fn decode(&self, s: String) -> String {
+        decode(s, "b58rpl", 58).unwrap()
+    }
+}
+
+impl Base58Flickr {
+    pub fn new() -> Base58Flickr { Base58Flickr{} }
+
+    pub fn encode(&self, s: String) -> String {
+        encode(s, "b58flkr", 58).unwrap()
+    }
+
+    pub fn decode(&self, s: String) -> String {
+        decode(s, "b58flkr", 58).unwrap()
     }
 }
 

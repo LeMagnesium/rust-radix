@@ -3,7 +3,7 @@
     ßÿ Mg // 2016 // License : WTFPL
 
     Command syntax :
-        ./radix8 <d/e> <string>
+        ./radix64 <d/e> <string>
 
 */
 
@@ -18,10 +18,10 @@ enum Modes {
 fn main() {
     let args: Vec<_> = std::env::args().collect();
     if args.len() == 2 && args[1] == "--help" {
-        println!("./radix8 <d/e> <string>");
+        println!("./radix64 <d/e> <string>");
         std::process::exit(0)
     } else if args.len() < 3 {
-        println!("Not enough arguments, see base8 --help for help");
+        println!("Not enough arguments, see base64 --help for help");
         std::process::exit(0)
     }
 
@@ -31,8 +31,8 @@ fn main() {
          _  => Modes::Unknown,
     };
 
-    use radix::Base8;
-    let m = Base8::new();
+    use radix::Base64;
+    let m = Base64::new();
 
     println!("{}", match mode {
         Modes::Encode => m.encode(args[2].to_string()),
