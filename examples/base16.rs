@@ -21,7 +21,7 @@ fn main() {
         println!("./radix16 <d/e> <string>");
         std::process::exit(0)
     } else if args.len() < 3 {
-        println!("Not enough arguments, see base8 --help for help");
+        println!("Not enough arguments, see base16 --help for help");
         std::process::exit(0)
     }
 
