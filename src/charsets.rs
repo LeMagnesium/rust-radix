@@ -23,6 +23,7 @@ fn get_charset(code: &str) -> std::result::Result<&str, String> {
         "b58bc" => Ok("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"),
         "b58rpl" => Ok("rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz"),
         "b58flkr" => Ok("123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"),
+	"b94" => Ok("!\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ'[]^_`abcdefghijklmnopqrstuvwxyz{|}~"),
         _ => Err(format!("unknown charset {}", code)),
     }
 }

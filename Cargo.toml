@@ -1,6 +1,6 @@
 [package]
 name = "radix"
-version = "0.0.3"
+version = "1.1.0"
 authors = ["LeMagnesium <mg.minetest@gmail.com>"]
 
 description = "Rust Radix Manipulation Library"

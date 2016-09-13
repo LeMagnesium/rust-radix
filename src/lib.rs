@@ -12,11 +12,13 @@
         b58rpl  / 58    -> Base58Ripple;
         b58flkr / 58    -> Base58Flickr;
         b64     / 64    -> Base64;
+        b94     / 94    -> Base94;
 
 */
 
 include!("./charsets.rs");
 
+pub struct Base94;
 pub struct Base64;
 pub struct Base58BC;
 pub struct Base58Ripple;
@@ -123,6 +125,18 @@ pub fn decode(s: String, basename: &str, radix: usize) -> Result<String, String>
     match success {
         true => Ok(result),
         false => Err("error in decoding string".to_string()),
+    }
+}
+
+impl Base94 {
+    pub fn new() -> Base94 { Base94{} }
+
+    pub fn encode(&self, s: String) -> String {
+        encode(s, "b94", 94).unwrap()
+    }
+
+    pub fn decode(&self, s: String) -> String {
+        decode(s, "b94", 94).unwrap()
     }
 }
 
